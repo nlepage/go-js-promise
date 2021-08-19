@@ -2,10 +2,32 @@ package promise_test
 
 import (
 	"fmt"
+	"syscall/js"
 	"time"
 
 	promise "github.com/nlepage/go-js-promise"
 )
+
+func ExampleNew() {
+	p, resolve, reject := promise.New()
+
+	go func() {
+		// do some asynchronous job...
+
+		if err := error(nil); err != nil {
+			reject(err) // reject promise if something went wrong
+			return
+		}
+
+		// resolve promise if all looks good
+		resolve("asynchronous job is done")
+	}()
+
+	fmt.Println(p.InstanceOf(js.Global().Get("Promise")))
+
+	// Output:
+	// true
+}
 
 func ExampleAwait() {
 	p, resolve, _ := promise.New()
