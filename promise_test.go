@@ -12,13 +12,33 @@ func ExampleAwait() {
 
 	go func() {
 		time.Sleep(500 * time.Millisecond)
-		resolve("waited 500ms!")
+		resolve("resolved after 500ms!")
 	}()
 
-	v, _ := promise.Await(p)
+	v, err := promise.Await(p)
+	if err != nil {
+		return
+	}
 
 	fmt.Println(v)
 
 	// Output:
-	// waited 500ms!
+	// resolved after 500ms!
+}
+
+func ExampleAwait_reject() {
+	p, _, reject := promise.New()
+
+	go func() {
+		time.Sleep(500 * time.Millisecond)
+		reject("rejected after 500ms!")
+	}()
+
+	_, err := promise.Await(p)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// rejected after 500ms!
 }

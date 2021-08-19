@@ -51,9 +51,9 @@ func Await(p js.Value) (js.Value, error) {
 	})
 	defer then.Release()
 
-	errCh := make(chan error)
+	errCh := make(chan js.Value)
 	var catch js.Func = js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
-		errCh <- js.Error{Value: args[0]}
+		errCh <- args[0]
 		return nil
 	})
 	defer catch.Release()
@@ -64,7 +64,7 @@ func Await(p js.Value) (js.Value, error) {
 	case res := <-resCh:
 		return res, nil
 	case err := <-errCh:
-		return js.Undefined(), err
+		return js.Undefined(), Reason(err)
 	}
 }
 
@@ -82,4 +82,20 @@ func Any(ps []js.Value) (js.Value, error) {
 
 func Race(ps []js.Value) (js.Value, error) {
 	return js.Undefined(), errors.New("not implemented")
+}
+
+type Reason js.Value
+
+var _ error = Reason{}
+
+func (r Reason) Error() string {
+	v := js.Value(r)
+
+	if v.Type() == js.TypeObject {
+		if message := v.Get("message"); message.Type() == js.TypeString {
+			return message.String()
+		}
+	}
+
+	return js.Global().Call("String", v).String()
 }
