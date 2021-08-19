@@ -20,21 +20,51 @@ func ExampleNew() {
 		}
 
 		// resolve promise if all looks good
-		resolve("asynchronous job is done")
+		resolve("asynchronous job is done!")
 	}()
 
 	fmt.Println(p.InstanceOf(js.Global().Get("Promise")))
 
+	v, _ := promise.Await(p)
+	fmt.Println(v)
+
 	// Output:
 	// true
+	// asynchronous job is done!
+}
+
+func ExampleResolve() {
+	p := promise.Resolve("already resolved!")
+
+	fmt.Println(p.InstanceOf(js.Global().Get("Promise")))
+
+	v, _ := promise.Await(p)
+	fmt.Println(v)
+
+	// Output:
+	// true
+	// already resolved!
+}
+
+func ExampleReject() {
+	p := promise.Reject("already rejected!")
+
+	fmt.Println(p.InstanceOf(js.Global().Get("Promise")))
+
+	_, err := promise.Await(p)
+	fmt.Println(err)
+
+	// Output:
+	// true
+	// already rejected!
 }
 
 func ExampleAwait() {
 	p, resolve, _ := promise.New()
 
 	go func() {
-		time.Sleep(500 * time.Millisecond)
-		resolve("resolved after 500ms!")
+		time.Sleep(100 * time.Millisecond)
+		resolve("resolved after 100ms!")
 	}()
 
 	v, err := promise.Await(p)
@@ -45,15 +75,15 @@ func ExampleAwait() {
 	fmt.Println(v)
 
 	// Output:
-	// resolved after 500ms!
+	// resolved after 100ms!
 }
 
 func ExampleAwait_reject() {
 	p, _, reject := promise.New()
 
 	go func() {
-		time.Sleep(500 * time.Millisecond)
-		reject("rejected after 500ms!")
+		time.Sleep(100 * time.Millisecond)
+		reject("rejected after 100ms!")
 	}()
 
 	_, err := promise.Await(p)
@@ -62,5 +92,5 @@ func ExampleAwait_reject() {
 	}
 
 	// Output:
-	// rejected after 500ms!
+	// rejected after 100ms!
 }

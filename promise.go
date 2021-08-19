@@ -34,11 +34,11 @@ func New() (p js.Value, resolve func(interface{}), reject func(interface{})) {
 }
 
 func Resolve(v interface{}) js.Value {
-	panic("not implemented")
+	return js.Global().Get("Promise").Call("resolve", v)
 }
 
 func Reject(v interface{}) js.Value {
-	panic("not implemented")
+	return js.Global().Get("Promise").Call("reject", v)
 }
 
 // Await waits for the Promise to be resolved and returns the value
