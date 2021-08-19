@@ -1,19 +1,21 @@
-package promise
+package promise_test
 
 import (
 	"fmt"
 	"time"
+
+	promise "github.com/nlepage/go-js-promise"
 )
 
 func ExampleAwait() {
-	p, resolve, _ := New()
+	p, resolve, _ := promise.New()
 
 	go func() {
 		time.Sleep(500 * time.Millisecond)
 		resolve("waited 500ms!")
 	}()
 
-	v, _ := Await(p)
+	v, _ := promise.Await(p)
 
 	fmt.Println(v)
 
