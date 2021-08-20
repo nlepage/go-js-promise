@@ -27,15 +27,11 @@ jobs:
       uses: actions/setup-node@v2.4.0
       with:
         node-version: 12
-    
-    - id: read-wasm-exec-path
-      name: Read wasm-exec path
-      run: echo "::set-output name=wasm-exec-path::$(go env GOROOT)/misc/wasm"
 
     - name: Build
       run: go build -v ./...
 
     - name: Test
       env:
-        PATH: ${{env.PATH}}:${{steps.read-wasm-exec-path.outputs.wasm-exec-path}}
+        PATH: ${{env.PATH}}:${{env.GOROOT}}/misc/wasm
       run: go test -v ./...
