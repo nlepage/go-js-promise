@@ -23,9 +23,9 @@ func ExampleNew() {
 		resolve("asynchronous job is done!")
 	}()
 
-	fmt.Println(p.InstanceOf(js.Global().Get("Promise")))
-
 	v, _ := promise.Await(p)
+
+	fmt.Println(p.InstanceOf(js.Global().Get("Promise")))
 	fmt.Println(v)
 
 	// Output:
@@ -36,9 +36,9 @@ func ExampleNew() {
 func ExampleResolve() {
 	p := promise.Resolve("already resolved!")
 
-	fmt.Println(p.InstanceOf(js.Global().Get("Promise")))
-
 	v, _ := promise.Await(p)
+
+	fmt.Println(p.InstanceOf(js.Global().Get("Promise")))
 	fmt.Println(v)
 
 	// Output:
@@ -49,9 +49,9 @@ func ExampleResolve() {
 func ExampleReject() {
 	p := promise.Reject("already rejected!")
 
-	fmt.Println(p.InstanceOf(js.Global().Get("Promise")))
-
 	_, err := promise.Await(p)
+
+	fmt.Println(p.InstanceOf(js.Global().Get("Promise")))
 	fmt.Println(err)
 
 	// Output:
