@@ -3,16 +3,18 @@ package promise_test
 import (
 	"fmt"
 	"syscall/js"
+	"testing"
 	"time"
 
 	promise "github.com/nlepage/go-js-promise"
 )
 
-func ExampleNew() {
+func Example() {
+	// create a new Promise
 	p, resolve, reject := promise.New()
 
 	go func() {
-		// do some asynchronous job...
+		time.Sleep(100 * time.Millisecond) // do some asynchronous job...
 
 		if err := error(nil); err != nil {
 			reject(err) // reject promise if something went wrong
@@ -23,74 +25,51 @@ func ExampleNew() {
 		resolve("asynchronous job is done!")
 	}()
 
-	v, _ := promise.Await(p)
-
-	fmt.Println(p.InstanceOf(js.Global().Get("Promise")))
-	fmt.Println(v)
-
-	// Output:
-	// true
-	// asynchronous job is done!
-}
-
-func ExampleResolve() {
-	p := promise.Resolve("already resolved!")
-
-	v, _ := promise.Await(p)
-
-	fmt.Println(p.InstanceOf(js.Global().Get("Promise")))
-	fmt.Println(v)
-
-	// Output:
-	// true
-	// already resolved!
-}
-
-func ExampleReject() {
-	p := promise.Reject("already rejected!")
-
-	_, err := promise.Await(p)
-
-	fmt.Println(p.InstanceOf(js.Global().Get("Promise")))
-	fmt.Println(err)
-
-	// Output:
-	// true
-	// already rejected!
-}
-
-func ExampleAwait() {
-	p, resolve, _ := promise.New()
-
-	go func() {
-		time.Sleep(100 * time.Millisecond)
-		resolve("resolved after 100ms!")
-	}()
-
+	// wait for the promise to resolve or reject
 	v, err := promise.Await(p)
 	if err != nil {
+		fmt.Printf("error: %v\n", err.Error())
 		return
 	}
 
 	fmt.Println(v)
 
 	// Output:
-	// resolved after 100ms!
+	// asynchronous job is done!
 }
 
-func ExampleAwait_reject() {
-	p, _, reject := promise.New()
+func TestResolve(t *testing.T) {
+	p := promise.Resolve("already resolved!")
 
-	go func() {
-		time.Sleep(100 * time.Millisecond)
-		reject("rejected after 100ms!")
-	}()
+	v, err := promise.Await(p)
 
-	_, err := promise.Await(p)
-	if err != nil {
-		fmt.Println(err)
+	if !p.InstanceOf(js.Global().Get("Promise")) {
+		t.Fatal("p should be instance of Promise")
 	}
 
-	// Output:
-	// rejected after 100ms!
+	if err != nil {
+		t.Fatalf("p rejected with %v", err.Error())
+	}
+
+	if v.String() != "already resolved!" {
+		t.Fatalf("p resolved with %v, expected %v", err.Error(), "already resolved!")
+	}
+}
+
+func TestReject(t *testing.T) {
+	p := promise.Reject("already rejected!")
+
+	_, err := promise.Await(p)
+
+	if !p.InstanceOf(js.Global().Get("Promise")) {
+		t.Fatal("p should be instance of Promise")
+	}
+
+	if err == nil {
+		t.Fatal("p should be rejected")
+	}
+
+	if err.Error() != "already rejected!" {
+		t.Fatalf("p rejected with %v, expected %v", err.Error(), "already rejected!")
+	}
 }
