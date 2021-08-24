@@ -69,7 +69,21 @@ func Await(p js.Value) (js.Value, error) {
 }
 
 func All(ps []js.Value) ([]js.Value, error) {
-	return nil, errors.New("not implemented")
+	arg := make([]interface{}, len(ps))
+	for i, p := range ps {
+		arg[i] = p
+	}
+
+	v, err := Await(js.Global().Get("Promise").Call("all", arg))
+	if err != nil {
+		return nil, err
+	}
+
+	values := make([]js.Value, 0, len(ps))
+	for i := range ps {
+		values = append(values, v.Index(i))
+	}
+	return values, nil
 }
 
 func AllSettled(ps []js.Value) ([]PromiseResult, error) {

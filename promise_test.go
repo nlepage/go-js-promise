@@ -38,6 +38,28 @@ func Example() {
 	// asynchronous job is done!
 }
 
+func ExampleAll() {
+	values, err := promise.All([]js.Value{
+		promise.Resolve(1),
+		promise.Resolve(2),
+		promise.Resolve(3),
+	})
+
+	if err != nil {
+		fmt.Printf("error: %v\n", err.Error())
+		return
+	}
+
+	for _, v := range values {
+		fmt.Println(v.Int())
+	}
+
+	// Output:
+	// 1
+	// 2
+	// 3
+}
+
 func TestResolve(t *testing.T) {
 	p := promise.Resolve("already resolved!")
 
