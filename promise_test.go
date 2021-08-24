@@ -204,4 +204,11 @@ func TestAny_rejected(t *testing.T) {
 	if err == nil {
 		t.Fatal("any should be rejected")
 	}
+
+	errs := err.(promise.AggregateError).Errors()
+	if len(errs) != 2 {
+		t.Fatalf("any rejected with %v errors, expected %v", len(errs), 2)
+	}
+
+	// FIXME assert error values
 }

@@ -122,6 +122,25 @@ func (r Reason) Error() string {
 	return js.Global().Call("String", v).String()
 }
 
+type AggregateError js.Error
+
+var _ error = AggregateError{}
+
+func (err AggregateError) Error() string {
+	return js.Error(err).Error()
+}
+
+func (err AggregateError) Errors() []error {
+	v := js.Error(err).Value.Get("errors")
+	l := v.Length()
+
+	errs := make([]error, l)
+	for i := 0; i < l; i++ {
+		errs[i] = Reason(v.Index(i))
+	}
+	return errs
+}
+
 func valuesToAnys(values []js.Value) []interface{} {
 	anys := make([]interface{}, len(values))
 	for i, p := range values {
