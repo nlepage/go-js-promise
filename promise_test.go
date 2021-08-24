@@ -204,8 +204,4 @@ func TestAny_rejected(t *testing.T) {
 	if err == nil {
 		t.Fatal("any should be rejected")
 	}
-
-	if err.Error() != "rejected at last!" {
-		t.Fatalf("any rejected with %v, expected %v", err.Error(), "rejected at last!")
-	}
 }
