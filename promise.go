@@ -90,7 +90,7 @@ func Any(ps []js.Value) (js.Value, error) {
 }
 
 func Race(ps []js.Value) (js.Value, error) {
-	return js.Undefined(), errors.New("not implemented")
+	return Await(js.Global().Get("Promise").Call("race", valuesToAnys(ps)))
 }
 
 type Result js.Value

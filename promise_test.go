@@ -38,28 +38,6 @@ func Example() {
 	// asynchronous job is done!
 }
 
-func ExampleAll() {
-	values, err := promise.All([]js.Value{
-		promise.Resolve(1),
-		promise.Resolve(2),
-		promise.Resolve(3),
-	})
-
-	if err != nil {
-		fmt.Printf("error: %v\n", err.Error())
-		return
-	}
-
-	for _, v := range values {
-		fmt.Println(v.Int())
-	}
-
-	// Output:
-	// 1
-	// 2
-	// 3
-}
-
 func TestResolve(t *testing.T) {
 	p := promise.Resolve("already resolved!")
 
@@ -96,6 +74,28 @@ func TestReject(t *testing.T) {
 	}
 }
 
+func ExampleAll() {
+	values, err := promise.All([]js.Value{
+		promise.Resolve(1),
+		promise.Resolve(2),
+		promise.Resolve(3),
+	})
+
+	if err != nil {
+		fmt.Printf("error: %v\n", err.Error())
+		return
+	}
+
+	for _, v := range values {
+		fmt.Println(v.Int())
+	}
+
+	// Output:
+	// 1
+	// 2
+	// 3
+}
+
 func TestAll_rejected(t *testing.T) {
 	_, err := promise.All([]js.Value{
 		promise.Resolve(1),
@@ -108,7 +108,7 @@ func TestAll_rejected(t *testing.T) {
 	}
 
 	if err.Error() != "reject all!" {
-		t.Fatalf("p rejected with %v, expected %v", err.Error(), "reject all!")
+		t.Fatalf("all rejected with %v, expected %v", err.Error(), "reject all!")
 	}
 }
 
@@ -132,4 +132,41 @@ func ExampleAllSettled() {
 	// resolved: 1
 	// rejected: 2
 	// resolved: 3
+}
+
+func ExampleRace() {
+	p1, resolve1, _ := promise.New()
+	p2, resolve2, _ := promise.New()
+
+	time.AfterFunc(200*time.Millisecond, func() { resolve1("second!") })
+	time.AfterFunc(100*time.Millisecond, func() { resolve2("first!") })
+
+	v, err := promise.Race([]js.Value{p1, p2})
+	if err != nil {
+		fmt.Printf("error: %v\n", err.Error())
+		return
+	}
+
+	fmt.Println(v.String())
+
+	// Output:
+	// first!
+}
+
+func TestRace_rejected(t *testing.T) {
+	p1, resolve1, _ := promise.New()
+	p2, _, reject2 := promise.New()
+
+	time.AfterFunc(200*time.Millisecond, func() { resolve1("second!") })
+	time.AfterFunc(100*time.Millisecond, func() { reject2("reject first!") })
+
+	_, err := promise.Race([]js.Value{p1, p2})
+
+	if err == nil {
+		t.Fatal("race should be rejected")
+	}
+
+	if err.Error() != "reject first!" {
+		t.Fatalf("race rejected with %v, expected %v", err.Error(), "reject first!")
+	}
 }
