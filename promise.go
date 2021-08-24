@@ -5,12 +5,6 @@ import (
 	"syscall/js"
 )
 
-type PromiseResult struct {
-	Status string
-	Value  js.Value
-	Reason js.Value
-}
-
 // New creates a new JavaScript Promise
 func New() (p js.Value, resolve func(interface{}), reject func(interface{})) {
 	var cbFunc js.Func
@@ -69,12 +63,7 @@ func Await(p js.Value) (js.Value, error) {
 }
 
 func All(ps []js.Value) ([]js.Value, error) {
-	arg := make([]interface{}, len(ps))
-	for i, p := range ps {
-		arg[i] = p
-	}
-
-	v, err := Await(js.Global().Get("Promise").Call("all", arg))
+	v, err := Await(js.Global().Get("Promise").Call("all", valuesToAnys(ps)))
 	if err != nil {
 		return nil, err
 	}
@@ -86,8 +75,14 @@ func All(ps []js.Value) ([]js.Value, error) {
 	return values, nil
 }
 
-func AllSettled(ps []js.Value) ([]PromiseResult, error) {
-	return nil, errors.New("not implemented")
+func AllSettled(ps []js.Value) []Result {
+	v, _ := Await(js.Global().Get("Promise").Call("allSettled", valuesToAnys(ps)))
+
+	results := make([]Result, 0, len(ps))
+	for i := range ps {
+		results = append(results, Result(v.Index(i)))
+	}
+	return results
 }
 
 func Any(ps []js.Value) (js.Value, error) {
@@ -96,6 +91,20 @@ func Any(ps []js.Value) (js.Value, error) {
 
 func Race(ps []js.Value) (js.Value, error) {
 	return js.Undefined(), errors.New("not implemented")
+}
+
+type Result js.Value
+
+func (r Result) Status() string {
+	return js.Value(r).Get("status").String()
+}
+
+func (r Result) Value() js.Value {
+	return js.Value(r).Get("value")
+}
+
+func (r Result) Reason() Reason {
+	return Reason(js.Value(r).Get("reason"))
 }
 
 type Reason js.Value
@@ -112,4 +121,12 @@ func (r Reason) Error() string {
 	}
 
 	return js.Global().Call("String", v).String()
+}
+
+func valuesToAnys(values []js.Value) []interface{} {
+	anys := make([]interface{}, len(values))
+	for i, p := range values {
+		anys[i] = p
+	}
+	return anys
 }

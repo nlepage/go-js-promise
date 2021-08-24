@@ -111,3 +111,25 @@ func TestAll_rejected(t *testing.T) {
 		t.Fatalf("p rejected with %v, expected %v", err.Error(), "reject all!")
 	}
 }
+
+func ExampleAllSettled() {
+	results := promise.AllSettled([]js.Value{
+		promise.Resolve(1),
+		promise.Reject(2),
+		promise.Resolve(3),
+	})
+
+	for _, r := range results {
+		switch r.Status() {
+		case "fulfilled":
+			fmt.Printf("resolved: %v\n", r.Value().Int())
+		case "rejected":
+			fmt.Printf("rejected: %v\n", r.Reason().Error())
+		}
+	}
+
+	// Output:
+	// resolved: 1
+	// rejected: 2
+	// resolved: 3
+}
