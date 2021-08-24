@@ -1,7 +1,6 @@
 package promise
 
 import (
-	"errors"
 	"syscall/js"
 )
 
@@ -86,7 +85,7 @@ func AllSettled(ps []js.Value) []Result {
 }
 
 func Any(ps []js.Value) (js.Value, error) {
-	return js.Undefined(), errors.New("not implemented")
+	return Await(js.Global().Get("Promise").Call("any", valuesToAnys(ps)))
 }
 
 func Race(ps []js.Value) (js.Value, error) {

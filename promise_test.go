@@ -170,3 +170,42 @@ func TestRace_rejected(t *testing.T) {
 		t.Fatalf("race rejected with %v, expected %v", err.Error(), "reject first!")
 	}
 }
+
+func ExampleAny() {
+	p1 := promise.Reject("rejected at first!")
+	p2, resolve2, _ := promise.New()
+	p3, _, reject3 := promise.New()
+
+	time.AfterFunc(200*time.Millisecond, func() { resolve2("resolved at last!") })
+	time.AfterFunc(100*time.Millisecond, func() { reject3("eventually rejected!") })
+
+	v, err := promise.Any([]js.Value{p1, p2, p3})
+	if err != nil {
+		fmt.Printf("error: %v\n", err.Error())
+		return
+	}
+
+	fmt.Println(v.String())
+
+	// Output:
+	// resolved at last!
+}
+
+func TestAny_rejected(t *testing.T) {
+	p1 := promise.Reject("rejected at first!")
+	p2, _, reject2 := promise.New()
+	p3, _, reject3 := promise.New()
+
+	time.AfterFunc(200*time.Millisecond, func() { reject2("rejected at last!") })
+	time.AfterFunc(100*time.Millisecond, func() { reject3("eventually rejected!") })
+
+	_, err := promise.Any([]js.Value{p1, p2, p3})
+
+	if err == nil {
+		t.Fatal("any should be rejected")
+	}
+
+	if err.Error() != "rejected at last!" {
+		t.Fatalf("any rejected with %v, expected %v", err.Error(), "rejected at last!")
+	}
+}
