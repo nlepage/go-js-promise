@@ -95,3 +95,19 @@ func TestReject(t *testing.T) {
 		t.Fatalf("p rejected with %v, expected %v", err.Error(), "already rejected!")
 	}
 }
+
+func TestAll_rejected(t *testing.T) {
+	_, err := promise.All([]js.Value{
+		promise.Resolve(1),
+		promise.Resolve(2),
+		promise.Reject("reject all!"),
+	})
+
+	if err == nil {
+		t.Fatal("all should be rejected")
+	}
+
+	if err.Error() != "reject all!" {
+		t.Fatalf("p rejected with %v, expected %v", err.Error(), "reject all!")
+	}
+}
