@@ -35,7 +35,6 @@ func Example() {
 	fmt.Println(v)
 
 	// Output:
-	// true
 	// asynchronous job is done!
 }
 
