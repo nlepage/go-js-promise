@@ -85,7 +85,11 @@ func AllSettled(ps []js.Value) []Result {
 }
 
 func Any(ps []js.Value) (js.Value, error) {
-	return Await(js.Global().Get("Promise").Call("any", valuesToAnys(ps)))
+	v, err := Await(js.Global().Get("Promise").Call("any", valuesToAnys(ps)))
+	if err != nil {
+		err = AggregateError{js.Value(err.(Reason))}
+	}
+	return v, err
 }
 
 func Race(ps []js.Value) (js.Value, error) {
