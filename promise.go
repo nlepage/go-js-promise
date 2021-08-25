@@ -63,6 +63,10 @@ func Reject(v interface{}) js.Value {
 //
 // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await
 func Await(p js.Value) (js.Value, error) {
+	if t := p.Type(); t != js.TypeObject && t != js.TypeFunction || p.Get("then").Type() != js.TypeFunction {
+		return p, nil
+	}
+
 	resCh := make(chan js.Value)
 	var then js.Func = js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resCh <- args[0]

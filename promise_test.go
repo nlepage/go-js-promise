@@ -74,6 +74,39 @@ func TestReject(t *testing.T) {
 	}
 }
 
+func TestAwait_non_promise(t *testing.T) {
+	v, err := promise.Await(js.ValueOf("non promise!"))
+	if err != nil {
+		t.Fatalf("await returned an error %v", err)
+	}
+
+	if v.String() != "non promise!" {
+		t.Fatalf("await returned %v, expected %v", v.String(), "non promise!")
+	}
+
+	v, err = promise.Await(js.Global())
+	if err != nil {
+		t.Fatalf("await returned an error %v", err)
+	}
+
+	if v.Type() != js.TypeObject {
+		t.Fatalf("await returned %v, expected an object", v)
+	}
+
+	v, err = promise.Await(js.FuncOf(func(_ js.Value, _ []js.Value) interface{} {
+		return nil
+	}).Value)
+	if err != nil {
+		t.Fatalf("await returned an error %v", err)
+	}
+
+	if v.Type() != js.TypeFunction {
+		t.Fatalf("await returned %v, expected a function", v)
+	}
+}
+
+// FIXME TestAwait_chained
+
 func ExampleAll() {
 	values, err := promise.All([]js.Value{
 		promise.Resolve(1),
@@ -222,6 +255,3 @@ func TestAny_rejected(t *testing.T) {
 		t.Fatalf("any rejected with %v, expected %v", errs[2].Error(), "eventually rejected!")
 	}
 }
-
-// FIXME TestAwait_non_promise
-// FIXME TestAwait_chained
