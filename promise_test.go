@@ -222,3 +222,6 @@ func TestAny_rejected(t *testing.T) {
 		t.Fatalf("any rejected with %v, expected %v", errs[2].Error(), "eventually rejected!")
 	}
 }
+
+// FIXME TestAwait_non_promise
+// FIXME TestAwait_chained
