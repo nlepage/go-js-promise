@@ -210,5 +210,15 @@ func TestAny_rejected(t *testing.T) {
 		t.Fatalf("any rejected with %v errors, expected %v", len(errs), 3)
 	}
 
-	// FIXME assert error values
+	if errs[0].Error() != "rejected at first!" {
+		t.Fatalf("any rejected with %v, expected %v", errs[0].Error(), "rejected at first!")
+	}
+
+	if errs[1].Error() != "eventually rejected!" {
+		t.Fatalf("any rejected with %v, expected %v", errs[1].Error(), "eventually rejected!")
+	}
+
+	if errs[2].Error() != "rejected at last!" {
+		t.Fatalf("any rejected with %v, expected %v", errs[2].Error(), "rejected at last!")
+	}
 }
