@@ -63,31 +63,28 @@ func Reject(v interface{}) js.Value {
 //
 // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await
 func Await(p js.Value) (js.Value, error) {
-	if t := p.Type(); t != js.TypeObject && t != js.TypeFunction || p.Get("then").Type() != js.TypeFunction {
+	// Shortcut to avoid allocating chans and callbacks
+	if !isThenable(p) {
 		return p, nil
 	}
 
-	resCh := make(chan js.Value)
-	var onFulfilled js.Func = js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
-		resCh <- args[0]
-		return nil
-	})
+	resCh, onFulfilled := argChanFunc()
 	defer onFulfilled.Release()
-
-	errCh := make(chan js.Value)
-	var onRejected js.Func = js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
-		errCh <- args[0]
-		return nil
-	})
+	errCh, onRejected := argChanFunc()
 	defer onRejected.Release()
 
-	p.Call("then", onFulfilled, onRejected)
+	go p.Call("then", onFulfilled, onRejected)
 
-	select {
-	case res := <-resCh:
-		return res, nil
-	case err := <-errCh:
-		return js.Undefined(), Reason(err)
+	for {
+		select {
+		case res := <-resCh:
+			if !isThenable(res) {
+				return res, nil
+			}
+			go res.Call("then", onFulfilled, onRejected)
+		case err := <-errCh:
+			return js.Undefined(), Reason(err)
+		}
 	}
 }
 
@@ -115,6 +112,7 @@ func All(ps []js.Value) ([]js.Value, error) {
 //
 // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled
 func AllSettled(ps []js.Value) []Result {
+	// FIXME are u sure?
 	v, _ := Await(js.Global().Get("Promise").Call("allSettled", valuesToAnys(ps)))
 
 	results := make([]Result, 0, len(ps))
@@ -220,4 +218,17 @@ func valuesToAnys(values []js.Value) []interface{} {
 		anys[i] = p
 	}
 	return anys
+}
+
+func isThenable(v js.Value) bool {
+	t := v.Type()
+	return (t == js.TypeObject || t == js.TypeFunction) && v.Get("then").Type() == js.TypeFunction
+}
+
+func argChanFunc() (chan js.Value, js.Func) {
+	ch := make(chan js.Value)
+	return ch, js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		ch <- args[0]
+		return nil
+	})
 }

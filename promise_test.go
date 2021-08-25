@@ -28,13 +28,14 @@ func Example() {
 	// wait for the promise to resolve or reject
 	v, err := promise.Await(p)
 	if err != nil {
-		fmt.Printf("error: %v\n", err.Error())
+		fmt.Printf("error: %#v\n", err.Error())
 		return
 	}
 
 	fmt.Println(v)
 
 	// Output:
+	// true
 	// asynchronous job is done!
 }
 
@@ -48,11 +49,11 @@ func TestResolve(t *testing.T) {
 	}
 
 	if err != nil {
-		t.Fatalf("p rejected with %v", err.Error())
+		t.Fatalf("p rejected with %#v", err.Error())
 	}
 
 	if v.String() != "already resolved!" {
-		t.Fatalf("p resolved with %v, expected %v", err.Error(), "already resolved!")
+		t.Fatalf("p resolved with %#v, expected %#v", err.Error(), "already resolved!")
 	}
 }
 
@@ -70,42 +71,76 @@ func TestReject(t *testing.T) {
 	}
 
 	if err.Error() != "already rejected!" {
-		t.Fatalf("p rejected with %v, expected %v", err.Error(), "already rejected!")
+		t.Fatalf("p rejected with %#v, expected %#v", err.Error(), "already rejected!")
 	}
 }
 
 func TestAwait_non_promise(t *testing.T) {
 	v, err := promise.Await(js.ValueOf("non promise!"))
 	if err != nil {
-		t.Fatalf("await returned an error %v", err)
+		t.Fatalf("await returned an error %#v", err)
 	}
 
 	if v.String() != "non promise!" {
-		t.Fatalf("await returned %v, expected %v", v.String(), "non promise!")
+		t.Fatalf("await returned %#v, expected %#v", v.String(), "non promise!")
 	}
 
 	v, err = promise.Await(js.Global())
 	if err != nil {
-		t.Fatalf("await returned an error %v", err)
+		t.Fatalf("await returned an error %#v", err)
 	}
 
 	if v.Type() != js.TypeObject {
-		t.Fatalf("await returned %v, expected an object", v)
+		t.Fatalf("await returned %#v, expected an object", v)
 	}
 
 	v, err = promise.Await(js.FuncOf(func(_ js.Value, _ []js.Value) interface{} {
 		return nil
 	}).Value)
 	if err != nil {
-		t.Fatalf("await returned an error %v", err)
+		t.Fatalf("await returned an error %#v", err)
 	}
 
 	if v.Type() != js.TypeFunction {
-		t.Fatalf("await returned %v, expected a function", v)
+		t.Fatalf("await returned %#v, expected a function", v)
 	}
 }
 
-// FIXME TestAwait_chained
+func TestAwait_thenable(t *testing.T) {
+	thenable := js.ValueOf(map[string]interface{}{
+		"then": js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+			args[0].Invoke("not a real promise!")
+			return nil
+		}),
+	})
+
+	v, err := promise.Await(thenable)
+	if err != nil {
+		t.Fatalf("await returned an error %#v", err)
+	}
+
+	if v.String() != "not a real promise!" {
+		t.Fatalf("await returned %#v, expected %#v", v.String(), "not a real promise!")
+	}
+}
+
+func TestAwait_chained(t *testing.T) {
+	thenable := js.ValueOf(map[string]interface{}{
+		"then": js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+			args[0].Invoke(promise.Resolve("and another one!"))
+			return nil
+		}),
+	})
+
+	v, err := promise.Await(thenable)
+	if err != nil {
+		t.Fatalf("await returned an error %#v", err)
+	}
+
+	if v.String() != "and another one!" {
+		t.Fatalf("await returned %#v, expected %#v", v.String(), "and another one!")
+	}
+}
 
 func ExampleAll() {
 	values, err := promise.All([]js.Value{
@@ -115,7 +150,7 @@ func ExampleAll() {
 	})
 
 	if err != nil {
-		fmt.Printf("error: %v\n", err.Error())
+		fmt.Printf("error: %#v\n", err.Error())
 		return
 	}
 
@@ -141,7 +176,7 @@ func TestAll_rejected(t *testing.T) {
 	}
 
 	if err.Error() != "reject all!" {
-		t.Fatalf("all rejected with %v, expected %v", err.Error(), "reject all!")
+		t.Fatalf("all rejected with %#v, expected %#v", err.Error(), "reject all!")
 	}
 }
 
@@ -155,9 +190,9 @@ func ExampleAllSettled() {
 	for _, r := range results {
 		switch r.Status() {
 		case "fulfilled":
-			fmt.Printf("resolved: %v\n", r.Value().Int())
+			fmt.Printf("resolved: %#v\n", r.Value().Int())
 		case "rejected":
-			fmt.Printf("rejected: %v\n", r.Reason().Error())
+			fmt.Printf("rejected: %#v\n", r.Reason().Error())
 		}
 	}
 
@@ -176,7 +211,7 @@ func ExampleRace() {
 
 	v, err := promise.Race([]js.Value{p1, p2})
 	if err != nil {
-		fmt.Printf("error: %v\n", err.Error())
+		fmt.Printf("error: %#v\n", err.Error())
 		return
 	}
 
@@ -200,7 +235,7 @@ func TestRace_rejected(t *testing.T) {
 	}
 
 	if err.Error() != "reject first!" {
-		t.Fatalf("race rejected with %v, expected %v", err.Error(), "reject first!")
+		t.Fatalf("race rejected with %#v, expected %#v", err.Error(), "reject first!")
 	}
 }
 
@@ -214,7 +249,7 @@ func ExampleAny() {
 
 	v, err := promise.Any([]js.Value{p1, p2, p3})
 	if err != nil {
-		fmt.Printf("error: %v\n", err.Error())
+		fmt.Printf("error: %#v\n", err.Error())
 		return
 	}
 
@@ -240,18 +275,18 @@ func TestAny_rejected(t *testing.T) {
 
 	errs := err.(promise.AggregateError).Errors()
 	if len(errs) != 3 {
-		t.Fatalf("any rejected with %v errors, expected %v", len(errs), 3)
+		t.Fatalf("any rejected with %#v errors, expected %#v", len(errs), 3)
 	}
 
 	if errs[0].Error() != "rejected at first!" {
-		t.Fatalf("any rejected with %v, expected %v", errs[0].Error(), "rejected at first!")
+		t.Fatalf("any rejected with %#v, expected %#v", errs[0].Error(), "rejected at first!")
 	}
 
 	if errs[1].Error() != "rejected at last!" {
-		t.Fatalf("any rejected with %v, expected %v", errs[1].Error(), "rejected at last!")
+		t.Fatalf("any rejected with %#v, expected %#v", errs[1].Error(), "rejected at last!")
 	}
 
 	if errs[2].Error() != "eventually rejected!" {
-		t.Fatalf("any rejected with %v, expected %v", errs[2].Error(), "eventually rejected!")
+		t.Fatalf("any rejected with %#v, expected %#v", errs[2].Error(), "eventually rejected!")
 	}
 }
