@@ -94,7 +94,7 @@ func Await(p js.Value) (js.Value, error) {
 //
 // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/all
 func All(ps []js.Value) ([]js.Value, error) {
-	v, err := Await(js.Global().Get("Promise").Call("all", valuesToAnys(ps)))
+	v, err := Await(js.Global().Get("Promise").Call("all", valuesToArray(ps)))
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +113,7 @@ func All(ps []js.Value) ([]js.Value, error) {
 // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled
 func AllSettled(ps []js.Value) []Result {
 	// FIXME are u sure?
-	v, _ := Await(js.Global().Get("Promise").Call("allSettled", valuesToAnys(ps)))
+	v, _ := Await(js.Global().Get("Promise").Call("allSettled", valuesToArray(ps)))
 
 	results := make([]Result, 0, len(ps))
 	for i := range ps {
@@ -128,7 +128,7 @@ func AllSettled(ps []js.Value) []Result {
 //
 // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/any
 func Any(ps []js.Value) (js.Value, error) {
-	v, err := Await(js.Global().Get("Promise").Call("any", valuesToAnys(ps)))
+	v, err := Await(js.Global().Get("Promise").Call("any", valuesToArray(ps)))
 	if err != nil {
 		err = AggregateError{js.Value(err.(Reason))}
 	}
@@ -139,7 +139,7 @@ func Any(ps []js.Value) (js.Value, error) {
 //
 // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/race
 func Race(ps []js.Value) (js.Value, error) {
-	return Await(js.Global().Get("Promise").Call("race", valuesToAnys(ps)))
+	return Await(js.Global().Get("Promise").Call("race", valuesToArray(ps)))
 }
 
 // Result is a JavaScript object that describes the outcome of a promise.
@@ -211,13 +211,12 @@ func (err AggregateError) Errors() []error {
 	return errs
 }
 
-// FIXME create JS array
-func valuesToAnys(values []js.Value) []interface{} {
-	anys := make([]interface{}, len(values))
+func valuesToArray(values []js.Value) js.Value {
+	arr := js.Global().Call("Array", len(values))
 	for i, p := range values {
-		anys[i] = p
+		arr.SetIndex(i, p)
 	}
-	return anys
+	return arr
 }
 
 func isThenable(v js.Value) bool {
