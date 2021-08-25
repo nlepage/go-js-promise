@@ -68,20 +68,20 @@ func Await(p js.Value) (js.Value, error) {
 	}
 
 	resCh := make(chan js.Value)
-	var then js.Func = js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+	var onFulfilled js.Func = js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		resCh <- args[0]
 		return nil
 	})
-	defer then.Release()
+	defer onFulfilled.Release()
 
 	errCh := make(chan js.Value)
-	var catch js.Func = js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+	var onRejected js.Func = js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		errCh <- args[0]
 		return nil
 	})
-	defer catch.Release()
+	defer onRejected.Release()
 
-	p.Call("then", then).Call("catch", catch)
+	p.Call("then", onFulfilled, onRejected)
 
 	select {
 	case res := <-resCh:
