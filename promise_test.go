@@ -212,7 +212,7 @@ func ExampleAllSettled() {
 
 	// Output:
 	// resolved: 1
-	// rejected: 2
+	// rejected: "2"
 	// resolved: 3
 }
 
