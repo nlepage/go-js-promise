@@ -123,7 +123,7 @@ func TestAwait_thenable(t *testing.T) {
 	}
 }
 
-func TestAwait_chained(t *testing.T) {
+func TestAwait_thenable_returns_promise(t *testing.T) {
 	thenable := js.ValueOf(map[string]interface{}{
 		"then": js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 			args[0].Invoke(promise.Resolve("and another one!"))
@@ -138,6 +138,21 @@ func TestAwait_chained(t *testing.T) {
 
 	if v.String() != "and another one!" {
 		t.Fatalf("await returned %#v, expected %#v", v.String(), "and another one!")
+	}
+}
+
+func TestAwait_thenable_throws(t *testing.T) {
+	thenable := js.ValueOf(map[string]interface{}{
+		"then": js.Global().Get("JSON").Get("parse"),
+	})
+
+	_, err := promise.Await(thenable)
+	if err == nil {
+		t.Fatal("await should reject")
+	}
+
+	if err.Error() != "Unexpected token u in JSON at position 1" {
+		t.Fatalf("await rejected with %#v, expected %#v", err.Error(), "Unexpected token u in JSON at position 1")
 	}
 }
 

@@ -73,7 +73,14 @@ func Await(p js.Value) (js.Value, error) {
 	errCh, onRejected := argChanFunc()
 	defer onRejected.Release()
 
-	go p.Call("then", onFulfilled, onRejected)
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				errCh <- js.ValueOf(r)
+			}
+		}()
+		p.Call("then", onFulfilled, onRejected)
+	}()
 
 	for {
 		select {
@@ -112,7 +119,6 @@ func All(ps []js.Value) ([]js.Value, error) {
 //
 // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled
 func AllSettled(ps []js.Value) []Result {
-	// FIXME are u sure?
 	v, _ := Await(js.Global().Get("Promise").Call("allSettled", valuesToArray(ps)))
 
 	results := make([]Result, 0, len(ps))
