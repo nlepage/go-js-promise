@@ -1,6 +1,6 @@
-# github.com/nlepage/go-js-promise
+# go-js-promise
 
-Go WebAssembly utility package utility for interacting with JavaScript promises, and aiming to have an ["idiomatic Go"](https://dave.cheney.net/2020/02/23/the-zen-of-go) API.
+Go WebAssembly utility package for interacting with JavaScript promises, and aiming to have an ["idiomatic Go"](https://dave.cheney.net/2020/02/23/the-zen-of-go) API.
 
 [Documentation on pkg.go.dev](https://pkg.go.dev/github.com/nlepage/go-js-promise).
 
